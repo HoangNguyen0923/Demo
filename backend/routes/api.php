@@ -17,6 +17,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// Create account
 Route::post('/register', [
     'uses'  => 'AuthController@createUser',
     'as'    => 'create-user'
@@ -27,17 +28,28 @@ Route::get('/users', [
     'as'    => 'get-users'
 ]);
 
+// Login
 Route::post('/login', [
     'uses'  => 'AuthController@login',
     'as'    => 'login-user'
 ]);
 
-// Route::get('/logout', [
-//     'uses'  => 'AuthController@logoutUser',
-//     'as'    => 'logout-user'
-// ]);
-
+// Logout
 Route::get('/logout', [
     'uses' => 'AuthController@logout',
     'as' => 'logout-user'
 ])->middleware('auth:api');
+
+// Password reset link request routes...
+Route::post('password/email', [
+    'uses' => 'AuthController@createTokenResetPassword',
+    'as' => 'get-password-reset-link'
+]);
+Route::post('password/email-link', [
+    'uses' => 'AuthController@sendTokenResetPasswordLink',
+    'as' => 'send-password-reset-link'
+]);
+
+// Password reset routes...
+Route::post('password/reset', 'AuthController@resetPassword');
+

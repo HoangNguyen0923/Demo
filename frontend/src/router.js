@@ -5,6 +5,8 @@ import Login from './views/Login.vue'
 import Register from './views/Register.vue'
 import Dashboard from './views/Dashboard.vue'
 import ResetPassword from './views/ResetPassword.vue'
+import ResetPasswordLink from './views/ResetPasswordLink.vue'
+import ResetPasswordForm from './views/ResetPasswordForm.vue'
 
 Vue.use(Router)
 
@@ -39,6 +41,22 @@ const router = new Router({
       path: '/reset_password',
       name: 'reset_password',
       component: ResetPassword
+    },
+    {
+      path: '/reset_password_link',
+      name: 'reset_password_link',
+      component: ResetPasswordLink,
+      meta: {
+        requiresToken: true
+      }
+    },
+    {
+      path: '/reset_password_form',
+      name: 'reset_password_form',
+      component: ResetPasswordForm,
+      meta: {
+        requiresToken: true
+      }
     }
   ]
 })
@@ -58,8 +76,20 @@ router.beforeEach((to, from, next) => {
     // Parse the data with JSON.parse(), and the data becomes a JavaScript object.
     //
     let authUser = localStorage.storedData
-    console.log(authUser)
+    // console.log(authUser)
     if (!authUser) {
+      next({
+        path: '/'
+      })
+    } else {
+      next()
+    }
+  } else {
+    next()
+  }
+  if (to.matched.some(record => record.meta.requiresToken)) {
+    let tokenUser = localStorage.token_reset
+    if (!tokenUser) {
       next({
         path: '/'
       })

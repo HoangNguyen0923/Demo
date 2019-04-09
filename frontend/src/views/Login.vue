@@ -6,7 +6,7 @@
         <input type="text" id="email" class="form-control" placeholder="John@example.com" v-model="user.email" required>
       </div>
       <div class="form-group">
-        <label for="name">Password</label>
+        <label for="password">Password</label>
         <input type="password" id="password" class="form-control" v-model="user.password" required>
       </div>
       <div class="form-group">

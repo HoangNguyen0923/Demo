@@ -11,15 +11,6 @@
 import axios from 'axios'
 export default {
   methods: {
-    // onSubmitted () {
-    //   axios.get('http://localhost:8000/api/logout')
-    //     .then(response => {
-    //       console.log(response)
-    //       localStorage.removeItem('storedData')
-    //       this.$router.push('/')
-    //     })
-    //     .catch(error => console.error(error))
-    // },
     onSubmitted () {
       let config = {
         headers: {
@@ -27,7 +18,12 @@ export default {
         }
       }
       axios.get('http://localhost:8000/api/logout', config)
-        .then(response => console.log(response.data))
+        .then(response => {
+          console.log(response)
+          localStorage.removeItem('storedData')
+          this.$router.push('/')
+        })
+        .catch(error => console.error(error))
     }
   }
 }

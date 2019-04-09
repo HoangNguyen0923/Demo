@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Input;
 use Validator;
 use Lcobucci\JWT\Parser;
 use DB;
+use Carbon\Carbon;
 class AuthController extends Controller
 {
     // Register user
@@ -28,12 +29,11 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 204);
         }
-        // $user = User::where('email', '=', Input::get('email'))->first();
-        // return response()->json(['auth' => $user], 200);       
         // Check if record is existed?
         if (User::where('email', '=', Input::get('email'))->first()) {
             return response()->json(['auth' => 'user existed'], 204);
         } else {
+            // Create user account
             $user = new User();
             $user->name = $request->input('name');
             $user->email = $request->input('email');
@@ -78,26 +78,88 @@ class AuthController extends Controller
     // Logout
     public function logout(Request $request)
     {
-        // $value = $request->bearerToken();
-        $value = $request->headers->all();
-        // echo($value);
-        return response()->json(['value'=> $value],200);
-        // $id = (new Parser())->parse($value)->getHeader('jti');
-        // return response()->json(['value'=> $id],200);
-        // //  echo($id);
-        // // $token = DB::table('oauth_access_tokens')->where('id', $id)->first();
-        // // var_dump($token);
+        $value = $request->bearerToken();
+        // $value = $request->headers->all();
+        $id = (new Parser())->parse($value)->getHeader('jti');
+        $token = $request->user()->tokens->find($id);
+        if ($token->revoke()) {
+            return response()->json(['auth' => 'Delete tokens success'], 200);
+        } else {
+            return response()->json(['auth' => 'Delete token failed'], 404);
+        } 
+        // $token = DB::table('oauth_access_tokens')->where('id', $id)->first();
+        // var_dump($token);
         // if (DB::table('oauth_access_tokens')->where('id', $id)->delete()){
-        //     return response()->json(['auth' => 'Delete tokens success'], 200);
+            // return response()->json(['auth' => 'Delete tokens success'], 200);
         // } else {
-        //     return response()->json(['auth' => 'Delete token failed'], 404);
+            // return response()->json(['auth' => 'Delete token failed'], 404);
         // }
-        // // Auth::logout();
     }
 
-    // Reset Password
-    // public function resetPassword(Request $request)
-    // {
-    //     $curr_password = $request->
-    // }
+    // Create token when request forget password executed
+    public function createTokenResetPassword(Request $request)
+    {
+        $email = $request->email;
+        if (User::where('email', '=', $email)->first()) {
+            $current_date_time = Carbon::now()->toDateTimeString();
+            $value = [
+                'email' => $email,
+                'token' => str_random(255),
+                'time' => $current_date_time
+            ];
+            DB::insert('insert into password_resets (email, token, created_at) values (?, ?, ?)', 
+            [$value['email'],$value['token'],$value['time']]);
+            return response()->json([
+                'token' => $value['token'],
+                'check' => 'success'],200);
+        } else {
+            return response()->json(['check' => 'failed'],200);
+        }
+    }
+
+    // Send Token Reset Link
+    public function sendTokenResetPasswordLink(Request $request)
+    {
+        $token = $request->token;
+        $pw_reset_email = DB::table('password_resets')->where('token', $token)->first();
+        $user_email = DB::table('users')->where('email', $pw_reset_email->email)->first();
+        // $email = str_repeat("*", strlen($user_email->email));
+        return response()->json([
+            'email' => $user_email->email,
+            'token' => $token,
+            'check' => 'success'
+        ], 200);
+    }
+
+    // Reset Password - New password
+    public function resetPassword(Request $request)
+    {
+        // get request current password
+        $curr_password = $request->curr_password;
+        // get request new password
+        $new_password = $request->new_password;
+
+        $token = $request->token;
+        $pw_reset_email = DB::table('password_resets')->where('token', $token)->first();
+        $user_email = User::where('email', $pw_reset_email->email)->first();
+
+        // check input password if matches user password in database
+        if ($curr_password === $new_password) {
+            return response()->json([
+                'error' => 'New password is the same as the old'
+            ], 200);
+        } else {
+            if (!Hash::check($curr_password, $user_email->password)) {
+                return response()->json([
+                    'result' => 'Not matched'
+                ],200);
+            } else {
+                $user_email->fill(['password' => Hash::make($new_password)])->save();
+                DB::delete('delete from password_resets where token = ?', [$token]);
+                return response()->json([
+                    'update' => 'Success'
+                ], 200);
+            }
+        }
+    }
 }
