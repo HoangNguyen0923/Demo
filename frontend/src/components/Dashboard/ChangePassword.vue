@@ -1,16 +1,20 @@
 <template>
-  <div>
-    <h2>Reset Password Form</h2>
-    <form autocomplete="off" v-on:submit.prevent="resetPassword" method="post">
+  <div class="changePassword">
+    <h2>Change Password</h2>
+    <form autocomplete="off" v-on:submit.prevent="changePassword" method="post">
+      <div class="form-group">
+        <label for="curr_password">Current Password</label>
+        <input type="password" id="curr_password" class="form-control" v-model="user.curr_password" required>
+      </div>
       <div class="form-group">
         <label for="new_password">New Password</label>
         <input type="password" id="new_password" class="form-control" v-model="user.new_password" required>
       </div>
       <div class="form-group">
-        <label for="new_password_confirm">New Password Confirm</label>
+        <label for="new_password">New Password Confirm</label>
         <input type="password" id="new_password_confirm" class="form-control" v-model="user.new_password_confirm" required>
       </div>
-      <button class="btn btn-primary">Reset Password</button>
+      <button class="btn btn-primary">Change Password</button>
     </form>
   </div>
 </template>
@@ -21,6 +25,7 @@ export default {
   data () {
     return {
       user: {
+        curr_password: '',
         new_password: '',
         new_password_confirm: '',
         token: ''
@@ -28,18 +33,17 @@ export default {
     }
   },
   methods: {
-    resetPassword () {
-      axios.post('http://localhost:8000/api/password/reset',
+    changePassword () {
+      axios.post('http://localhost:8000/api/password/change',
         {
-          token: localStorage.token_reset,
+          token: localStorage.storedData,
+          curr_password: this.user.curr_password,
           new_password: this.user.new_password,
           new_password_confirm: this.user.new_password_confirm
         })
         .then(response => {
-          if (response.data.check === 'update success') {
+          if (response.data.check === 'change password success') {
             console.log(response)
-            localStorage.removeItem('token_reset')
-            this.$router.push('/login')
           }
         })
         .catch(error => console.log(error))
@@ -47,3 +51,6 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+</style>

@@ -8,7 +8,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Contracts\Auth\CanResetPassword;
 
-
 class User extends Authenticatable
 {
     use Notifiable;
@@ -55,5 +54,9 @@ class User extends Authenticatable
     public function getRememberTokenName()
     {
         return 'remember_token';
+    }
+
+    public function products() {
+        $this->hasMany('App\Product');
     }
 }

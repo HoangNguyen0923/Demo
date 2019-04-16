@@ -40,6 +40,10 @@ Route::get('/logout', [
     'as' => 'logout-user'
 ])->middleware('auth:api');
 
+// Route::post('/checkAuth', function (Request $request) {
+//     return response()->json(['auth' => 'success'], 200);
+// })->middleware('auth:api');
+
 // Password reset link request routes...
 Route::post('password/email', [
     'uses' => 'AuthController@createTokenResetPassword',
@@ -51,5 +55,13 @@ Route::post('password/email-link', [
 ]);
 
 // Password reset routes...
-Route::post('password/reset', 'AuthController@resetPassword');
+Route::post('password/reset', [
+    'uses' => 'AuthController@resetPassword',
+    'as' => 'reset-password'
+]);
 
+// Password change
+Route::post('/password/change', [
+    'uses' => 'AuthController@changePassword',
+    'as' => 'change-password'
+]);

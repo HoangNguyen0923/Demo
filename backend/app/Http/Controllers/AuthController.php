@@ -134,32 +134,60 @@ class AuthController extends Controller
     // Reset Password - New password
     public function resetPassword(Request $request)
     {
-        // get request current password
-        $curr_password = $request->curr_password;
         // get request new password
         $new_password = $request->new_password;
+        // get request new password confirm
+        $new_password_confirm = $request->new_password_confirm;
 
         $token = $request->token;
         $pw_reset_email = DB::table('password_resets')->where('token', $token)->first();
         $user_email = User::where('email', $pw_reset_email->email)->first();
 
-        // check input password if matches user password in database
-        if ($curr_password === $new_password) {
-            return response()->json([
-                'error' => 'New password is the same as the old'
-            ], 200);
-        } else {
-            if (!Hash::check($curr_password, $user_email->password)) {
-                return response()->json([
-                    'result' => 'Not matched'
-                ],200);
-            } else {
+        // check input new password if matches user password in database
+        if ($new_password === $new_password_confirm) {
+            if (!Hash::check($new_password, $user_email->password)) {
                 $user_email->fill(['password' => Hash::make($new_password)])->save();
                 DB::delete('delete from password_resets where token = ?', [$token]);
                 return response()->json([
-                    'update' => 'Success'
+                    'check' => 'update success'
                 ], 200);
+            } else {
+                return response()->json(['error' => 'New password is the same as the old'], 200);
             }
+        } else {
+            return response()->json(['result' => 'not matched'], 200);
+        }
+    }
+
+    //Change password
+    public function changePassword(Request $request)
+    {
+        // get request current password
+        $curr_password = $request->curr_password;
+        // get request new password
+        $new_password = $request->new_password;
+        //get request new password confirm
+        $new_password_confirm = $request->new_password_confirm;
+
+        $token = $request->token;
+        $token_id = (new Parser())->parse($token)->getHeader('jti');
+        $oauth_user = DB::table('oauth_access_tokens')->where('id', $token_id)->first();
+        $user = User::where('id', $oauth_user->user_id)->first();
+        
+        //Check new password matched current password
+        if (Hash::check($curr_password, $user->password)) {
+            if ($new_password !== $curr_password) {
+                if ($new_password === $new_password_confirm) {
+                    $user->fill(['password' => Hash::make($new_password)])->save();
+                    return response()->json(['check' => 'change password success'],200);
+                } else {
+                    return response()->json(['error' => 'new password is not matched with its confirm'], 200);
+                }
+            } else {
+                return response()->json(['error' => 'New password is the same as the old'], 200);
+            } 
+        } else {
+            return response()->json(['error' => 'The current password is not matched'], 200);
         }
     }
 }

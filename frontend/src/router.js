@@ -7,6 +7,8 @@ import Dashboard from './views/Dashboard.vue'
 import ResetPassword from './views/ResetPassword.vue'
 import ResetPasswordLink from './views/ResetPasswordLink.vue'
 import ResetPasswordForm from './views/ResetPasswordForm.vue'
+import ChangePassword from './components/Dashboard/ChangePassword.vue'
+import Product from './components/Dashboard/Product.vue'
 
 Vue.use(Router)
 
@@ -35,7 +37,19 @@ const router = new Router({
       component: Dashboard,
       meta: {
         requiresAuth: true
-      }
+      },
+      children: [
+        {
+          path: 'changepassword',
+          name: 'Change_Password',
+          component: ChangePassword
+        },
+        {
+          path: 'product',
+          name: 'Product',
+          component: Product
+        }
+      ]
     },
     {
       path: '/reset_password',
@@ -69,7 +83,6 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     // this route requires auth, check if logged in
     //
-    // let authUser = JSON.stringify(localStorage.getItem('storedData'))
     // When sending data to a web server, the data has to be a string.
     // Convert a JavaScript object into a string with JSON.stringify().
     // When receiving data from a web server, the data is always a string.

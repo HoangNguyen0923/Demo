@@ -29,5 +29,6 @@ export default {
   }
   .row {
     margin: 0;
+    position: relative;
   }
 </style>
